@@ -1,0 +1,70 @@
+version: '3'
+
+services:
+  # Main Kali Linux container for command line practice
+  kali:
+    image: kalilinux/kali-rolling
+    container_name: oscp-command-line-kali
+    volumes:
+      - ./scripts:/opt/scripts
+      - ./data:/opt/data
+    environment:
+      - TERM=xterm-256color
+    command: >
+      bash -c "
+        apt-get update && 
+        apt-get install -y kali-linux-headless man-db vim nano tmux curl wget netcat-traditional python3 python3-pip nmap && 
+        apt-get clean &&
+        echo 'alias ll=\"ls -la\"' >> /root/.bashrc &&
+        echo 'PS1=\"\\[\\033[01;31m\\]kali\\[\\033[00m\\]:\\[\\033[01;34m\\]\\w\\[\\033[00m\\]\\$ \"' >> /root/.bashrc &&
+        mkdir -p /root/exercises &&
+        echo 'Welcome to the OSCP Command Line Practice Environment!' > /root/README.txt &&
+        echo 'The scripts directory contains practice scripts mounted from the host.' >> /root/README.txt &&
+        echo 'Type \"cd /opt/scripts\" to access practice scripts.' >> /root/README.txt &&
+        tail -f /dev/null
+      "
+    networks:
+      practice_net:
+        ipv4_address: 172.20.0.2
+
+  # Target Ubuntu machine for network commands practice
+  ubuntu-target:
+    image: ubuntu:latest
+    container_name: oscp-command-line-target
+    volumes:
+      - ./data:/data
+    command: >
+      bash -c "
+        apt-get update && 
+        apt-get install -y openssh-server apache2 python3 && 
+        apt-get clean &&
+        echo 'root:password123' | chpasswd &&
+        mkdir -p /var/run/sshd &&
+        echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config &&
+        echo 'Welcome to the target machine!' > /var/www/html/index.html &&
+        echo '<h1>OSCP Command Line Practice</h1>' >> /var/www/html/index.html &&
+        echo '<p>This is a target machine for practicing command line skills.</p>' >> /var/www/html/index.html &&
+        service ssh start &&
+        service apache2 start &&
+        tail -f /dev/null
+      "
+    networks:
+      practice_net:
+        ipv4_address: 172.20.0.3
+
+  # Vulnerable web application for command line practice
+  dvwa:
+    image: vulnerables/web-dvwa
+    container_name: oscp-command-line-dvwa
+    networks:
+      practice_net:
+        ipv4_address: 172.20.0.4
+    ports:
+      - "8080:80"
+
+networks:
+  practice_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24

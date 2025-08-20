@@ -1,0 +1,53 @@
+version: '3'
+
+services:
+  kali_linux:
+    image: kalilinux/kali-rolling
+    container_name: kali_linux
+    volumes:
+      - ./setup:/root/setup
+      - ./shared:/root/shared
+    ports:
+      - "2222:22"
+      - "8080:8080"
+      - "8000:8000"
+    tty: true
+    stdin_open: true
+    command: bash -c "apt-get update && apt-get install -y openssh-server sudo zsh curl git python3-pip nmap metasploit-framework burpsuite dirb gobuster nikto hydra john hashcat exploitdb net-tools iputils-ping && service ssh start && mkdir -p /root/.ssh && echo 'root:kali' | chpasswd && tail -f /dev/null"
+    networks:
+      practice_network:
+        ipv4_address: 172.21.0.2
+
+  metasploitable:
+    image: tleemcjr/metasploitable2
+    container_name: metasploitable
+    ports:
+      - "20:20"
+      - "21:21"
+      - "22:22"
+      - "23:23"
+      - "25:25"
+      - "80:80"
+      - "139:139"
+      - "445:445"
+      - "3306:3306"
+    networks:
+      practice_network:
+        ipv4_address: 172.21.0.3
+    tty: true
+
+  dvwa:
+    image: vulnerables/web-dvwa
+    container_name: dvwa
+    ports:
+      - "8081:80"
+    networks:
+      practice_network:
+        ipv4_address: 172.21.0.4
+
+networks:
+  practice_network:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.21.0.0/24

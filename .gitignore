@@ -1,0 +1,78 @@
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+
+# Compiled binaries
+*.exe
+*.dll
+*.so
+*.dylib
+*.out
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+*.db
+
+# Docker
+.docker/
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+.temp/
+
+# User-specific files that might contain sensitive information
+*.pem
+*.key
+*.crt
+*.pfx
+*.p12
+*.env
+.env
+
+# Backup files
+*.bak
+*.backup
+*~
