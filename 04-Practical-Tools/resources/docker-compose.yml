@@ -1,0 +1,120 @@
+version: '3'
+
+networks:
+  pentest_network:
+    ipam:
+      config:
+        - subnet: 192.168.100.0/24
+
+services:
+  # Kali Linux - Attack Machine
+  kali:
+    image: kalilinux/kali-rolling
+    container_name: kali_attack
+    hostname: kali
+    volumes:
+      - ./scripts:/opt/scripts
+      - ./wordlists:/opt/wordlists
+    networks:
+      pentest_network:
+        ipv4_address: 192.168.100.5
+    ports:
+      - "8022:22"
+    command: >
+      bash -c "
+        apt-get update && 
+        apt-get install -y openssh-server metasploit-framework nmap gobuster dirb nikto hydra john hashcat sqlmap burpsuite zaproxy wfuzz enum4linux smbmap exploitdb python3-pip curl wget netcat-traditional && 
+        pip3 install impacket crackmapexec && 
+        service ssh start && 
+        echo 'root:kali' | chpasswd && 
+        mkdir -p /run/sshd && 
+        /usr/sbin/sshd -D
+      "
+    cap_add:
+      - NET_ADMIN
+    tty: true
+
+  # Ubuntu - Vulnerable Web Server
+  ubuntu_web:
+    image: ubuntu:20.04
+    container_name: ubuntu_web
+    hostname: ubuntu-web
+    networks:
+      pentest_network:
+        ipv4_address: 192.168.100.10
+    ports:
+      - "8080:80"
+      - "8443:443"
+    command: >
+      bash -c "
+        apt-get update && 
+        apt-get install -y apache2 php libapache2-mod-php php-mysql openssh-server && 
+        service apache2 start && 
+        service ssh start && 
+        echo 'root:password123' | chpasswd && 
+        mkdir -p /var/www/html/admin && 
+        echo '<?php system($_GET[\"cmd\"]); ?>' > /var/www/html/backdoor.php && 
+        echo '<html><body><h1>Admin Login</h1><form action=\"login.php\" method=\"post\"><input type=\"text\" name=\"username\"><input type=\"password\" name=\"password\"><input type=\"submit\" value=\"Login\"></form></body></html>' > /var/www/html/admin/index.html && 
+        echo '<?php if($_POST[\"username\"] == \"admin\" && $_POST[\"password\"] == \"admin123\") { echo \"<h1>Welcome Admin</h1>\"; } else { echo \"<h1>Login Failed</h1>\"; } ?>' > /var/www/html/admin/login.php && 
+        mkdir -p /run/sshd && 
+        /usr/sbin/sshd -D
+      "
+    tty: true
+
+  # Windows - Vulnerable SMB Server
+  metasploitable:
+    image: tleemcjr/metasploitable2
+    container_name: metasploitable
+    hostname: metasploitable
+    networks:
+      pentest_network:
+        ipv4_address: 192.168.100.20
+    ports:
+      - "8021:21"
+      - "8022:22"
+      - "8023:23"
+      - "8025:25"
+      - "8080:80"
+      - "8139:139"
+      - "8445:445"
+      - "8512:512"
+    tty: true
+
+  # DVWA - Damn Vulnerable Web Application
+  dvwa:
+    image: vulnerables/web-dvwa
+    container_name: dvwa
+    hostname: dvwa
+    networks:
+      pentest_network:
+        ipv4_address: 192.168.100.30
+    ports:
+      - "8081:80"
+    tty: true
+
+  # OWASP Juice Shop - Modern Vulnerable Web Application
+  juice_shop:
+    image: bkimminich/juice-shop
+    container_name: juice_shop
+    hostname: juice-shop
+    networks:
+      pentest_network:
+        ipv4_address: 192.168.100.40
+    ports:
+      - "3000:3000"
+    tty: true
+
+  # Vulnerable Windows Machine
+  win_vulnerable:
+    image: vulnerables/cve-2017-7494
+    container_name: win_vulnerable
+    hostname: win-vulnerable
+    networks:
+      pentest_network:
+        ipv4_address: 192.168.100.50
+    ports:
+      - "8137:137"
+      - "8138:138"
+      - "8139:139"
+      - "8445:445"
+    tty: true
